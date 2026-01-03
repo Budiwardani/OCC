@@ -1,0 +1,8 @@
+2026-01-03 14:34:34 [error]: error: column "updated_at" of relation "companies" does not exist
+    at C:\Users\Suswati\Documents\OCC\backend\node_modules\pg-pool\index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async updateBranding (file:///C:/Users/Suswati/Documents/OCC/backend/src/controllers/branding.controller.js:40:24)
+2026-01-03 14:35:18 [error]: error: column "updated_at" of relation "companies" does not exist
+    at C:\Users\Suswati\Documents\OCC\backend\node_modules\pg-pool\index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async updateBranding (file:///C:/Users/Suswati/Documents/OCC/backend/src/controllers/branding.controller.js:40:24)
