@@ -10,7 +10,16 @@ export default function Complaints() {
     const [totalPages, setTotalPages] = useState(1);
     const [statusFilter, setStatusFilter] = useState("ALL");
     const [search, setSearch] = useState("");
+    const [officialEmails, setOfficialEmails] = useState([]);
+    const [showForwardModal, setShowForwardModal] = useState(false);
+    const [selectedComplaint, setSelectedComplaint] = useState(null);
+    const [selectedEmailId, setSelectedEmailId] = useState("");
+    const [forwarding, setForwarding] = useState(false);
     const navigate = useNavigate();
+
+    useEffect(() => {
+        fetchOfficialEmails();
+    }, []);
 
     useEffect(() => {
         fetchComplaints();
@@ -40,6 +49,40 @@ export default function Complaints() {
         fetchComplaints();
     };
 
+    const fetchOfficialEmails = async () => {
+        try {
+            const token = localStorage.getItem("token");
+            const res = await api.get("/official-emails", {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            setOfficialEmails(res.data);
+        } catch (error) {
+            console.error("Failed to fetch official emails", error);
+        }
+    };
+
+    const handleForward = async () => {
+        if (!selectedEmailId) return alert("Please select an email");
+        setForwarding(true);
+        try {
+            const token = localStorage.getItem("token");
+            await api.post(`/dashboard/complaints/${selectedComplaint.id}/forward`, {
+                target_email_id: selectedEmailId
+            }, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            alert("Ticket forwarded successfully!");
+            setShowForwardModal(false);
+            setSelectedComplaint(null);
+            setSelectedEmailId("");
+        } catch (error) {
+            console.error(error);
+            alert("Failed to forward ticket");
+        } finally {
+            setForwarding(false);
+        }
+    };
+
     const getStatusColor = (status) => {
         switch (status) {
             case "OPEN": return "bg-yellow-100 text-yellow-800";
@@ -62,13 +105,13 @@ export default function Complaints() {
                             {/* Toolbar */}
                             <div className="mt-4 flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
                                 <div className="flex space-x-2">
-                                    {["ALL", "OPEN", "IN_PROGRESS", "RESOLVED"].map((s) => (
+                                    {["ALL", "OPEN", "IN_PROGRESS", "RESOLVED", "CLOSED"].map((s) => (
                                         <button
                                             key={s}
                                             onClick={() => { setStatusFilter(s); setPage(1); }}
                                             className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${statusFilter === s
-                                                    ? "bg-primary-100 text-primary-700"
-                                                    : "bg-white text-secondary-500 hover:bg-secondary-50 border border-secondary-300"
+                                                ? "bg-primary-100 text-primary-700"
+                                                : "bg-white text-secondary-500 hover:bg-secondary-50 border border-secondary-300"
                                                 }`}
                                         >
                                             {s.replace("_", " ")}
@@ -144,8 +187,17 @@ export default function Complaints() {
                                                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-secondary-500">
                                                                         {complaint.assignee_name || <span className="text-secondary-400 italic">Unassigned</span>}
                                                                     </td>
-                                                                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                                                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-3">
                                                                         <Link to={`/dashboard/complaints/${complaint.id}`} className="text-primary-600 hover:text-primary-900">View</Link>
+                                                                        <button
+                                                                            onClick={() => {
+                                                                                setSelectedComplaint(complaint);
+                                                                                setShowForwardModal(true);
+                                                                            }}
+                                                                            className="text-indigo-600 hover:text-indigo-900"
+                                                                        >
+                                                                            Forward
+                                                                        </button>
                                                                     </td>
                                                                 </tr>
                                                             ))
@@ -197,6 +249,51 @@ export default function Complaints() {
                     </div>
                 </main>
             </div>
+
+            {/* Forward Modal */}
+            {showForwardModal && (
+                <div className="fixed z-10 inset-0 overflow-y-auto">
+                    <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+                        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" onClick={() => setShowForwardModal(false)}></div>
+                        <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                            <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                                <h3 className="text-lg font-medium text-gray-900 mb-4">Forward Ticket to Official Email</h3>
+                                <p className="text-sm text-gray-500 mb-4">Ticket: <strong>#{selectedComplaint?.ticket_code}</strong></p>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Select Department/Email</label>
+                                <select
+                                    value={selectedEmailId}
+                                    onChange={(e) => setSelectedEmailId(e.target.value)}
+                                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                                >
+                                    <option value="">-- Select Email --</option>
+                                    {officialEmails.map(email => (
+                                        <option key={email.id} value={email.id}>{email.name} ({email.email})</option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                                <button
+                                    onClick={handleForward}
+                                    disabled={forwarding || !selectedEmailId}
+                                    className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50"
+                                >
+                                    {forwarding ? "Forwarding..." : "Forward"}
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        setShowForwardModal(false);
+                                        setSelectedComplaint(null);
+                                        setSelectedEmailId("");
+                                    }}
+                                    className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
+                                >
+                                    Cancel
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

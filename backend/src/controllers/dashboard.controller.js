@@ -173,21 +173,56 @@ export const updateComplaint = async (req, res) => {
 
 export const getAgents = async (req, res) => {
     try {
-        const result = await pool.query("SELECT id, name, email, role FROM users WHERE role != 'Customer'");
+        const { role, company_id } = req.user;
+        let query = `
+            SELECT u.id, u.name, u.email, u.role, u.company_id, c.name as company_name 
+            FROM users u
+            LEFT JOIN companies c ON u.company_id = c.id
+            WHERE u.role != 'Customer'
+        `;
+        const params = [];
+
+        if (role !== 'Superadmin') {
+            query += " AND u.company_id = $1";
+            params.push(company_id);
+        }
+
+        query += " ORDER BY u.id ASC";
+
+        const result = await pool.query(query, params);
         res.json(result.rows);
     } catch (err) {
-        logger.error(err.message, { stack: err.stack, context: "createAgent" });
+        logger.error(err.message, { stack: err.stack, context: "getAgents" });
         res.status(500).send("Server Error");
     }
 };
 
 export const createAgent = async (req, res) => {
     try {
-        const { name, email, password } = req.body;
+        const { name, email, password, role: requestedRole, company_id: requestedCompanyId } = req.body;
+        const { role: userRole, company_id: userCompanyId } = req.user;
 
         // Simple validation
         if (!name || !email || !password) {
             return res.status(400).json({ message: "Please provide name, email, and password" });
+        }
+
+        // Determine Role and Company
+        let finalRole = 'Agent';
+        let finalCompanyId = 1;
+
+        if (userRole === 'Superadmin') {
+            finalRole = requestedRole || 'Agent';
+            finalCompanyId = requestedCompanyId || 1;
+        } else if (userRole === 'Manager') {
+            finalRole = 'Agent'; // Managers can only create Agents
+            finalCompanyId = userCompanyId; // Managers can only create for their company
+        } else {
+            // Managers/Agents generally shouldn't reach here due to route protection, 
+            // but if they do, fallback to safe defaults or error?
+            // Route protection currently allows 'Superadmin' and 'Manager'.
+            finalRole = 'Agent';
+            finalCompanyId = userCompanyId;
         }
 
         // Check if user exists
@@ -196,25 +231,128 @@ export const createAgent = async (req, res) => {
             return res.status(400).json({ message: "User already exists" });
         }
 
-        // Hash password
-        // Note: Assuming 'bcrypt' is imported at top or available differently. 
-        // Since it wasn't in original file imports, need to ensure it is.
-        // For now, assume dynamic import or valid context. 
-        // Ideally I should update imports too.
-        // Let's use bcryptjs as used in auth controller.
         const salt = await bcrypt.genSalt(10);
         const passwordHash = await bcrypt.hash(password, salt);
 
-        // Insert Agent (Default company_id 1 for now)
         const newUser = await pool.query(
-            "INSERT INTO users (name, email, password_hash, role, company_id) VALUES ($1, $2, $3, 'Agent', 1) RETURNING id, name, email, role",
-            [name, email, passwordHash]
+            "INSERT INTO users (name, email, password_hash, role, company_id) VALUES ($1, $2, $3, $4, $5) RETURNING id, name, email, role, company_id",
+            [name, email, passwordHash, finalRole, finalCompanyId]
         );
 
         res.json(newUser.rows[0]);
 
     } catch (err) {
         logger.error(err.message, { stack: err.stack, context: "createAgent" });
+        res.status(500).send("Server Error");
+    }
+};
+
+export const notifyComplaint = async (req, res) => {
+    const { id } = req.params;
+    const { method, from_email_id } = req.body;
+
+    try {
+        const complaint = await pool.query("SELECT * FROM complaints WHERE id = $1", [id]);
+        if (complaint.rows.length === 0) return res.status(404).json({ message: "Complaint not found" });
+
+        const targetEmail = complaint.rows[0].customer_email;
+        const ticket = complaint.rows[0].ticket_code;
+
+        if (method === 'email') {
+            const sender = await pool.query("SELECT * FROM official_emails WHERE id = $1", [from_email_id]);
+            if (sender.rows.length === 0) return res.status(400).json({ message: "Invalid sender email ID" });
+
+            const fromAddress = sender.rows[0].email;
+            const fromName = sender.rows[0].name;
+
+            // Mock Email Sending
+            console.log(`[MOCK EMAIL] From: ${fromName} <${fromAddress}>`);
+            console.log(`[MOCK EMAIL] To: ${targetEmail}`);
+            console.log(`[MOCK EMAIL] Subject: Ticket #${ticket} Update`);
+
+            // Log this action? 
+            // logger.info(...)
+
+            return res.json({ message: `Email sent to ${targetEmail} from ${fromAddress}` });
+        }
+
+        res.status(400).json({ message: "Invalid method" });
+    } catch (err) {
+        logger.error(err.message, { context: "notifyComplaint" });
+        res.status(500).send("Server Error");
+    }
+};
+
+export const forwardComplaint = async (req, res) => {
+    const { id } = req.params;
+    const { target_email_id } = req.body;
+
+    try {
+        const complaint = await pool.query("SELECT * FROM complaints WHERE id = $1", [id]);
+        if (complaint.rows.length === 0) return res.status(404).json({ message: "Complaint not found" });
+
+        const ticket = complaint.rows[0].ticket_code;
+
+        // Get target email
+        const target = await pool.query("SELECT * FROM official_emails WHERE id = $1", [target_email_id]);
+        if (target.rows.length === 0) return res.status(400).json({ message: "Invalid target email ID" });
+
+        const toAddress = target.rows[0].email;
+        const toName = target.rows[0].name;
+
+        // Mock Forwarding
+        console.log(`[MOCK EMAIL FORWARD] From: System`);
+        console.log(`[MOCK EMAIL FORWARD] To: ${toName} <${toAddress}>`);
+        console.log(`[MOCK EMAIL FORWARD] Subject: FWD: Ticket #${ticket}`);
+        console.log(`[MOCK EMAIL FORWARD] Body: Complaint details attached...`);
+
+        // Record in responses/history?
+        // await pool.query("INSERT INTO complaint_responses (complaint_id, message, is_internal) VALUES ($1, $2, TRUE)", [id, `System forwarded ticket to ${toName} (${toAddress})`]);
+
+        res.json({ message: `Ticket forwarded to ${toName} (${toAddress}) successfully` });
+    } catch (err) {
+        logger.error(err.message, { context: "forwardComplaint" });
+        res.status(500).send("Server Error");
+    }
+};
+
+export const exportComplaints = async (req, res) => {
+    try {
+        const { status } = req.query;
+        let query = "SELECT * FROM complaints WHERE 1=1";
+        const params = [];
+
+        if (status && status !== 'ALL') {
+            query += " AND status = $1";
+            params.push(status);
+        }
+
+        query += " ORDER BY created_at DESC";
+        const { rows } = await pool.query(query, params);
+
+        // Convert to CSV
+        const headers = ["Ticket Code", "Date", "Customer", "Subject", "Status", "Priority", "Assignee"];
+        let csv = headers.join(",") + "\n";
+
+        rows.forEach(row => {
+            const line = [
+                row.ticket_code,
+                new Date(row.created_at).toISOString().split('T')[0],
+                row.customer_email,
+                `"${(row.subject || "").replace(/"/g, '""')}"`, // Escape quotes
+                row.status,
+                row.priority,
+                row.assigned_to || "Unassigned"
+            ];
+            csv += line.join(",") + "\n";
+        });
+
+        res.header('Content-Type', 'text/csv');
+        res.attachment('complaints_export.csv');
+        res.send(csv);
+
+    } catch (err) {
+        logger.error(err.message, { context: "exportComplaints" });
         res.status(500).send("Server Error");
     }
 };

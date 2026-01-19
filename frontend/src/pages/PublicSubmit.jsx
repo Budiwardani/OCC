@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import api from "../api/api";
 import { Link } from "react-router-dom";
@@ -7,12 +7,44 @@ export default function PublicSubmit() {
     const [done, setDone] = useState(false);
     const [result, setResult] = useState(null);
     const [loading, setLoading] = useState(false);
-    const { register, handleSubmit, formState: { errors } } = useForm();
+    const [categories, setCategories] = useState([]);
+    const { register, handleSubmit, watch, formState: { errors } } = useForm();
+    const watchCategory = watch("category");
+
+    useEffect(() => {
+        api.get('/categories')
+            .then(res => setCategories(res.data))
+            .catch(err => console.error("Failed to load categories", err));
+    }, []);
 
     const submit = async (data) => {
         setLoading(true);
         try {
-            const res = await api.post("/public/complaints", data);
+            const formData = new FormData();
+            formData.append("customer_name", data.customer_name);
+            formData.append("customer_email", data.customer_email);
+            formData.append("phone", data.phone);
+            formData.append("subject", data.subject);
+            formData.append("description", data.description);
+
+            // Handle Category
+            const selectedCat = categories.find(c => c.id === data.category);
+            let catValue = data.category;
+            if (selectedCat?.name === 'Other' && data.custom_category) {
+                catValue = data.custom_category;
+            }
+            formData.append("category", catValue);
+
+            // Handle Files
+            if (data.media && data.media.length > 0) {
+                for (let i = 0; i < data.media.length; i++) {
+                    formData.append("media", data.media[i]);
+                }
+            }
+
+            const res = await api.post("/public/complaints", formData, {
+                headers: { "Content-Type": "multipart/form-data" }
+            });
             setResult(res.data);
             setDone(true);
         } catch (error) {
@@ -102,14 +134,24 @@ export default function PublicSubmit() {
                                         className="block w-full pl-4 pr-10 py-3 text-base border-secondary-300 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm rounded-lg"
                                     >
                                         <option value="">Select a category...</option>
-                                        <option value="Product">Product Quality</option>
-                                        <option value="Service">Customer Service</option>
-                                        <option value="Billing">Billing Issue</option>
-                                        <option value="Delivery">Delivery Problem</option>
-                                        <option value="Other">Other</option>
+                                        {categories.map(cat => (
+                                            <option key={cat.id} value={cat.id}>{cat.name}</option>
+                                        ))}
                                     </select>
                                 </div>
                                 {errors.category && <p className="mt-2 text-sm text-red-600">{errors.category.message}</p>}
+
+                                {categories.find(c => c.id === watchCategory)?.name === 'Other' && (
+                                    <div className="mt-3">
+                                        <label className="block text-sm font-semibold text-secondary-700 mb-2">Please specify other category</label>
+                                        <input
+                                            {...register("custom_category", { required: "Please specify the category" })}
+                                            className="appearance-none block w-full px-4 py-3 border border-secondary-300 rounded-lg shadow-sm placeholder-secondary-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+                                            placeholder="e.g., Technical Glitch"
+                                        />
+                                        {errors.custom_category && <p className="mt-2 text-sm text-red-600">{errors.custom_category.message}</p>}
+                                    </div>
+                                )}
                             </div>
 
                             <div className="sm:col-span-1">
@@ -133,6 +175,17 @@ export default function PublicSubmit() {
                                 {errors.customer_email && <p className="mt-2 text-sm text-red-600">{errors.customer_email.message}</p>}
                             </div>
 
+                            <div className="sm:col-span-1">
+                                <label className="block text-sm font-semibold text-secondary-700 mb-2">WhatsApp / Phone Number</label>
+                                <input
+                                    type="tel"
+                                    {...register("phone", { required: "Phone number is required" })}
+                                    className="appearance-none block w-full px-4 py-3 border border-secondary-300 rounded-lg shadow-sm placeholder-secondary-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+                                    placeholder="08123456789"
+                                />
+                                {errors.phone && <p className="mt-2 text-sm text-red-600">{errors.phone.message}</p>}
+                            </div>
+
                             <div className="sm:col-span-2">
                                 <label className="block text-sm font-semibold text-secondary-700 mb-2">Subject</label>
                                 <input
@@ -152,6 +205,28 @@ export default function PublicSubmit() {
                                     placeholder="Please provide as much detail as possible..."
                                 />
                                 {errors.description && <p className="mt-2 text-sm text-red-600">{errors.description.message}</p>}
+                            </div>
+
+                            <div className="sm:col-span-2">
+                                <label className="block text-sm font-semibold text-secondary-700 mb-2">Upload Evidence (Images/Videos)</label>
+                                <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-secondary-300 border-dashed rounded-lg hover:border-primary-500 transition-colors bg-secondary-50 hover:bg-white">
+                                    <div className="space-y-1 text-center">
+                                        <svg className="mx-auto h-12 w-12 text-secondary-400" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
+                                            <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+                                        </svg>
+                                        <div className="flex text-sm text-secondary-600">
+                                            <label htmlFor="file-upload" className="relative cursor-pointer bg-white rounded-md font-medium text-primary-600 hover:text-primary-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-primary-500">
+                                                <span>Upload files</span>
+                                                <input id="file-upload" type="file" className="sr-only" multiple accept="image/*,video/*" {...register("media")} />
+                                            </label>
+                                            <p className="pl-1">or drag and drop</p>
+                                        </div>
+                                        <p className="text-xs text-secondary-500">PNG, JPG, MP4 up to 50MB</p>
+                                        {watch("media") && watch("media").length > 0 && (
+                                            <p className="text-sm text-green-600 mt-2 font-medium">{watch("media").length} files selected</p>
+                                        )}
+                                    </div>
+                                </div>
                             </div>
                         </div>
 

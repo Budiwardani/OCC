@@ -4,14 +4,22 @@ import Layout from "./components/Layout";
 import "./index.css";
 
 // Lazy Loading Pages
-const PublicSubmit = lazy(() => import("./pages/PublicSubmit"));
-const TrackComplaint = lazy(() => import("./pages/TrackComplaint"));
+const Portal = lazy(() => import("./pages/Portal"));
+// const PublicSubmit = lazy(() => import("./pages/PublicSubmit")); // Replaced by Portal
+// const TrackComplaint = lazy(() => import("./pages/TrackComplaint")); // Replaced by Portal
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const Complaints = lazy(() => import("./pages/Complaints"));
 const ComplaintDetail = lazy(() => import("./pages/ComplaintDetail"));
 const Agents = lazy(() => import("./pages/Agents"));
 const Branding = lazy(() => import("./pages/Branding"));
+const Categories = lazy(() => import("./pages/Categories"));
+const Companies = lazy(() => import("./pages/Companies"));
 const Login = lazy(() => import("./pages/Login"));
+const DraftSuratKuasa = lazy(() => import("./pages/DraftSuratKuasa"));
+const OfficialEmails = lazy(() => import("./pages/OfficialEmails"));
+const MasterTemplates = lazy(() => import("./pages/MasterTemplates"));
+const PublicUploadSuratKuasa = lazy(() => import("./pages/PublicUploadSuratKuasa"));
+const ApprovedSuratKuasa = lazy(() => import("./pages/ApprovedSuratKuasa"));
 
 // Loading Component
 const Loading = () => (
@@ -29,15 +37,29 @@ function App() {
       <Suspense fallback={<Loading />}>
         <Routes>
           <Route path="/login" element={<Login />} />
-          <Route path="/" element={<Layout />}>
-            <Route index element={<PublicSubmit />} />
-            <Route path="track" element={<TrackComplaint />} />
-            <Route path="dashboard" element={<Dashboard />} />
-            <Route path="dashboard/complaints" element={<Complaints />} />
-            <Route path="dashboard/complaints/:id" element={<ComplaintDetail />} />
-            <Route path="dashboard/agents" element={<Agents />} />
-            <Route path="dashboard/branding" element={<Branding />} />
+
+          {/* Public Routes with Layout */}
+          {/* Note: Portal now handles the main public experience */}
+          <Route path="/" element={<Portal />} />
+          <Route element={<Layout />}>
+            {/* Keep these if specific direct links are needed, otherwise Portal handles it */}
+            {/* <Route path="/submit" element={<PublicSubmit />} /> */}
+            {/* <Route path="/track" element={<TrackComplaint />} /> */}
+            <Route path="/upload-surat/:ticket" element={<PublicUploadSuratKuasa />} />
           </Route>
+
+          {/* Admin Routes (Sidebar included in components) */}
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/dashboard/complaints" element={<Complaints />} />
+          <Route path="/dashboard/complaints/:id" element={<ComplaintDetail />} />
+          <Route path="/dashboard/surat-kuasa" element={<DraftSuratKuasa />} />
+          <Route path="/dashboard/surat-kuasa/approved" element={<ApprovedSuratKuasa />} />
+          <Route path="/dashboard/agents" element={<Agents />} />
+          <Route path="/dashboard/branding" element={<Branding />} />
+          <Route path="/dashboard/categories" element={<Categories />} />
+          <Route path="/dashboard/companies" element={<Companies />} />
+          <Route path="/dashboard/official-emails" element={<OfficialEmails />} />
+          <Route path="/dashboard/master-templates" element={<MasterTemplates />} />
         </Routes>
       </Suspense>
     </BrowserRouter>

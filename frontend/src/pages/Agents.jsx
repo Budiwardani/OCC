@@ -5,13 +5,20 @@ import Sidebar from "../components/Sidebar";
 
 export default function Agents() {
     const [agents, setAgents] = useState([]);
+    const [companies, setCompanies] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
-    const [formData, setFormData] = useState({ name: '', email: '', password: '' });
+    const [formData, setFormData] = useState({ name: '', email: '', password: '', role: 'Agent', company_id: '' });
     const navigate = useNavigate();
+
+    const user = JSON.parse(localStorage.getItem("user") || "{}");
+    const isSuperadmin = (user.role || "").toLowerCase() === 'superadmin';
 
     useEffect(() => {
         fetchAgents();
+        if (isSuperadmin) {
+            fetchCompanies();
+        }
     }, []);
 
     const fetchAgents = async () => {
@@ -30,18 +37,43 @@ export default function Agents() {
         }
     };
 
+    const fetchCompanies = async () => {
+        try {
+            const token = localStorage.getItem("token");
+            const res = await api.get("/companies", {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            setCompanies(res.data);
+            // Set default company if none selected and companies available
+            if (res.data.length > 0 && !formData.company_id) {
+                setFormData(prev => ({ ...prev, company_id: res.data[0].id }));
+            }
+        } catch (error) {
+            console.error("Failed to fetch companies", error);
+        }
+    };
+
     const handleCreate = async (e) => {
         e.preventDefault();
         try {
             const token = localStorage.getItem("token");
-            await api.post("/dashboard/agents", formData, {
+
+            // Prepare payload
+            const payload = { ...formData };
+            // If not superadmin, remove role and company checks to let backend handle defaults
+            if (!isSuperadmin) {
+                delete payload.role;
+                delete payload.company_id;
+            }
+
+            await api.post("/dashboard/agents", payload, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setShowModal(false);
-            setFormData({ name: '', email: '', password: '' });
+            setFormData({ name: '', email: '', password: '', role: 'Agent', company_id: companies.length > 0 ? companies[0].id : '' });
             fetchAgents(); // Refresh list
         } catch (error) {
-            alert("Failed to create agent: " + (error.response?.data?.message || error.message));
+            alert("Failed to create user: " + (error.response?.data?.message || error.message));
         }
     };
 
@@ -53,14 +85,14 @@ export default function Agents() {
                     <div className="py-8">
                         <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 flex justify-between items-center">
                             <div>
-                                <h1 className="text-2xl font-bold text-secondary-900">Agents</h1>
-                                <p className="mt-1 text-sm text-secondary-500">Manage support agents</p>
+                                <h1 className="text-2xl font-bold text-secondary-900">User Management</h1>
+                                <p className="mt-1 text-sm text-secondary-500">Manage agents, managers, and admins</p>
                             </div>
                             <button
                                 onClick={() => setShowModal(true)}
                                 className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary-600 hover:bg-primary-700"
                             >
-                                Add New Agent
+                                Add New User
                             </button>
                         </div>
 
@@ -77,6 +109,7 @@ export default function Agents() {
                                                         <th className="px-6 py-3 text-left text-xs font-medium text-secondary-500 uppercase tracking-wider">Name</th>
                                                         <th className="px-6 py-3 text-left text-xs font-medium text-secondary-500 uppercase tracking-wider">Email</th>
                                                         <th className="px-6 py-3 text-left text-xs font-medium text-secondary-500 uppercase tracking-wider">Role</th>
+                                                        <th className="px-6 py-3 text-left text-xs font-medium text-secondary-500 uppercase tracking-wider">Company</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody className="bg-white divide-y divide-secondary-200">
@@ -84,7 +117,15 @@ export default function Agents() {
                                                         <tr key={agent.id}>
                                                             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-secondary-900">{agent.name}</td>
                                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-secondary-500">{agent.email}</td>
-                                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-secondary-500">{agent.role}</td>
+                                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-secondary-500">
+                                                                <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${agent.role === 'Superadmin' ? 'bg-purple-100 text-purple-800' :
+                                                                        agent.role === 'Manager' ? 'bg-blue-100 text-blue-800' :
+                                                                            'bg-green-100 text-green-800'
+                                                                    }`}>
+                                                                    {agent.role}
+                                                                </span>
+                                                            </td>
+                                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-secondary-500">{agent.company_name || '-'}</td>
                                                         </tr>
                                                     ))}
                                                 </tbody>
@@ -108,7 +149,7 @@ export default function Agents() {
                         <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
                         <div className="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
                             <div>
-                                <h3 className="text-lg leading-6 font-medium text-gray-900">Create New Agent</h3>
+                                <h3 className="text-lg leading-6 font-medium text-gray-900">Create New User</h3>
                                 <form onSubmit={handleCreate} className="mt-5 space-y-4">
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700">Name</label>
@@ -140,6 +181,37 @@ export default function Agents() {
                                             onChange={e => setFormData({ ...formData, password: e.target.value })}
                                         />
                                     </div>
+
+                                    {isSuperadmin && (
+                                        <>
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700">Role</label>
+                                                <select
+                                                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+                                                    value={formData.role}
+                                                    onChange={e => setFormData({ ...formData, role: e.target.value })}
+                                                >
+                                                    <option value="Agent">Agent</option>
+                                                    <option value="Manager">Manager</option>
+                                                    <option value="Superadmin">Superadmin</option>
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700">Company</label>
+                                                <select
+                                                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+                                                    value={formData.company_id}
+                                                    onChange={e => setFormData({ ...formData, company_id: e.target.value })}
+                                                >
+                                                    <option value="">Select Company</option>
+                                                    {companies.map(c => (
+                                                        <option key={c.id} value={c.id}>{c.name}</option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                        </>
+                                    )}
+
                                     <div className="mt-5 sm:mt-6 flex space-x-3">
                                         <button
                                             type="button"
@@ -152,7 +224,7 @@ export default function Agents() {
                                             type="submit"
                                             className="inline-flex justify-center w-full rounded-md border border-transparent shadow-sm px-4 py-2 bg-primary-600 text-base font-medium text-white hover:bg-primary-700 sm:text-sm"
                                         >
-                                            Create Agent
+                                            Create User
                                         </button>
                                     </div>
                                 </form>

@@ -37,6 +37,9 @@ CREATE TABLE complaints (
   category VARCHAR(100),
   subject VARCHAR(200),
   description TEXT,
+  location TEXT,
+  city VARCHAR(100),
+  phone VARCHAR(50),
   priority VARCHAR(20), -- 'Low', 'Medium', 'High', 'Critical'
   status VARCHAR(30),   -- 'OPEN', 'IN_PROGRESS', 'WAITING_CUSTOMER', 'RESOLVED', 'CLOSED'
   assigned_to INT REFERENCES users(id),

@@ -59,7 +59,7 @@ export default function Dashboard() {
                         <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
                             <h1 className="text-2xl font-bold text-secondary-900">Welcome, {user.name}</h1>
                             <p className="mt-1 text-sm text-secondary-500">
-                                {user.role === 'Superadmin' ? "System performance overview" : "Overview of your assigned tickets"}
+                                {((user.role || "").toLowerCase().replace(/\s/g, '') === 'superadmin') ? "System performance overview" : "Overview of your assigned tickets"}
                             </p>
                         </div>
 

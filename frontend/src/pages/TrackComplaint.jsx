@@ -7,6 +7,9 @@ export default function TrackComplaint() {
     const [data, setData] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
+    const [suratKuasaFiles, setSuratKuasaFiles] = useState([]);
+    const [uploadingSK, setUploadingSK] = useState(false);
+    const [masterTemplate, setMasterTemplate] = useState(null);
 
     const handleTrack = async (e) => {
         e.preventDefault();
@@ -19,6 +22,22 @@ export default function TrackComplaint() {
                 params: { ticket, token }
             });
             setData(res.data);
+
+            // Fetch Surat Kuasa Files
+            try {
+                const skRes = await api.get(`/surat-kuasa/${ticket}`);
+                setSuratKuasaFiles(skRes.data);
+            } catch (skErr) {
+                console.warn("Failed to fetch Surat Kuasa files", skErr);
+            }
+
+            // Fetch Master Template
+            try {
+                const mtRes = await api.get("/master-files/SURAT_KUASA_TEMPLATE");
+                setMasterTemplate(mtRes.data);
+            } catch (err) {
+                // Ignore if not present
+            }
         } catch (err) {
             setError("Complaint not found. Please check your ticket code and token.");
         } finally {
@@ -83,7 +102,7 @@ export default function TrackComplaint() {
             </div>
 
             {data && (
-                <div className="bg-white rounded-2xl shadow-lg p-8">
+                <div className="bg-white rounded-2xl shadow-lg p-8 big-data-card">
                     <div className="flex justify-between items-start mb-6">
                         <div>
                             <h2 className="text-2xl font-bold text-gray-900">{data.subject}</h2>
@@ -114,8 +133,120 @@ export default function TrackComplaint() {
                         <p className="text-gray-700 whitespace-pre-wrap">{data.description}</p>
                     </div>
 
+                    {/* Surat Kuasa Section */}
+                    <div className="mt-8 border-t pt-8">
+                        <h3 className="font-semibold text-gray-900 mb-4 flex items-center">
+                            <svg className="w-5 h-5 mr-2 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                            Surat Kuasa (Power of Attorney)
+                        </h3>
+
+                        {/* Master Template Download */}
+                        {masterTemplate && (
+                            <div className="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200 flex justify-between items-center">
+                                <div>
+                                    <h4 className="font-semibold text-blue-900">Need a Template?</h4>
+                                    <p className="text-sm text-blue-800">Download our standard Surat Kuasa form here.</p>
+                                </div>
+                                <a
+                                    href={`http://localhost:5000/${masterTemplate.file_path}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700"
+                                >
+                                    Download Template
+                                </a>
+                            </div>
+                        )}
+
+                        {suratKuasaFiles.length === 0 ? (
+                            <p className="text-gray-500 italic text-sm">No uploaded documents yet.</p>
+                        ) : (
+                            <ul className="space-y-3 mb-6">
+                                {suratKuasaFiles.map((file) => (
+                                    <li key={file.id} className="flex items-center justify-between bg-gray-50 p-3 rounded-lg border border-gray-200">
+                                        <div className="flex items-center">
+                                            <div className={`p-2 rounded-full mr-3 ${file.uploaded_by === 'ADMIN' ? 'bg-blue-100 text-blue-600' : 'bg-green-100 text-green-600'}`}>
+                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                                </svg>
+                                            </div>
+                                            <div>
+                                                <p className="text-sm font-medium text-gray-900">
+                                                    {file.uploaded_by === 'ADMIN' ? 'Draft from Admin' : 'Uploaded by Customer'}
+                                                </p>
+                                                <p className="text-xs text-gray-500">{new Date(file.created_at).toLocaleString()}</p>
+                                            </div>
+                                        </div>
+                                        <a
+                                            href={`http://localhost:5000/${file.file_path}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="text-primary-600 hover:text-primary-800 text-sm font-medium hover:underline"
+                                        >
+                                            Download
+                                        </a>
+                                    </li>
+                                ))}
+                            </ul>
+                        )}
+
+                        {/* Customer Upload */}
+                        <div className="bg-blue-50 border border-blue-100 rounded-lg p-5">
+                            <h4 className="text-sm font-semibold text-blue-900 mb-2">Upload Signed Surat Kuasa (Bermaterai)</h4>
+                            <p className="text-xs text-blue-700 mb-4">Please download the draft above, print it, sign it on top of a <strong>Materai 10.000</strong>, and upload the scanned copy here.</p>
+
+                            <form
+                                onSubmit={async (e) => {
+                                    e.preventDefault();
+                                    const fileInput = e.target.elements.skFile;
+                                    if (!fileInput.files[0]) return;
+
+                                    setUploadingSK(true);
+                                    try {
+                                        const formData = new FormData();
+                                        formData.append("ticket_code", data.ticket_code);
+                                        formData.append("file", fileInput.files[0]);
+
+                                        await api.post("/surat-kuasa/upload", formData, {
+                                            headers: { "Content-Type": "multipart/form-data" }
+                                        });
+
+                                        alert("File uploaded successfully!");
+                                        fileInput.value = null; // Reset
+                                        // Refresh list
+                                        const skRes = await api.get(`/surat-kuasa/${data.ticket_code}`);
+                                        setSuratKuasaFiles(skRes.data);
+                                    } catch (err) {
+                                        alert("Failed to upload file.");
+                                        console.error(err);
+                                    } finally {
+                                        setUploadingSK(false);
+                                    }
+                                }}
+                                className="flex items-center gap-3"
+                            >
+                                <input
+                                    name="skFile"
+                                    type="file"
+                                    accept=".pdf,.doc,.docx,.jpg,.png"
+                                    className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-100 file:text-blue-700 hover:file:bg-blue-200"
+                                    required
+                                />
+                                <button
+                                    type="submit"
+                                    disabled={uploadingSK}
+                                    className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
+                                >
+                                    {uploadingSK ? "..." : "Upload"}
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+
                     {data.responses && data.responses.length > 0 && (
-                        <div>
+                        <div className="mt-8 border-t pt-8">
                             <h3 className="font-semibold text-gray-900 mb-4">Responses</h3>
                             <div className="space-y-4">
                                 {data.responses.map((response, idx) => (
