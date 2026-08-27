@@ -3,6 +3,7 @@ import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
 import path from "path";
+import fs from "fs";
 import { fileURLToPath } from 'url';
 
 import authRoutes from "./routes/auth.routes.js";
@@ -57,9 +58,12 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 import errorHandler from "./middleware/error.middleware.js";
 
-// Routes
-app.get('/', (req, res) => {
+// Health checks
+app.get('/api', (req, res) => {
     res.json({ message: 'OCC API is running' });
+});
+app.get('/api/health', (req, res) => {
+    res.json({ status: 'ok' });
 });
 
 app.use("/api/auth", authRoutes);
@@ -74,6 +78,21 @@ app.use("/api/master-files", masterFilesRoutes);
 app.use("/api/surat-kuasa", suratKuasaRoutes);
 app.use("/api/invoices", invoicesRoutes);
 app.use("/api/ai", aiRoutes);
+
+// Frontend static serving and SPA catch-all
+const frontendDist = path.join(__dirname, '../frontend/dist');
+app.use(express.static(frontendDist));
+
+app.get('*', (req, res, next) => {
+    if (req.path.startsWith('/api')) {
+        return res.status(404).json({ message: 'API route not found' });
+    }
+    const indexPath = path.join(frontendDist, 'index.html');
+    if (fs.existsSync(indexPath)) {
+        return res.sendFile(indexPath);
+    }
+    next();
+});
 
 // Error Handler (must be last)
 app.use(errorHandler);
