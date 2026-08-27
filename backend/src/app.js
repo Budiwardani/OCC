@@ -23,9 +23,12 @@ const __dirname = path.dirname(path.dirname(__filename)); // Go up one level fro
 
 const app = express();
 
+app.set("trust proxy", true);
+
 const allowedOrigins = [
     /\.workers\.dev$/,
     /\.pages\.dev$/,
+    /\.vercel\.app$/,
     "http://localhost:5173",
     "http://localhost:4173",
     process.env.PUBLIC_APP_URL,

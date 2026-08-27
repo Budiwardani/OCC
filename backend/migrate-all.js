@@ -3,8 +3,12 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
+const dbUrl = process.env.DATABASE_URL || "postgresql://postgres:postgres@localhost:5432/occ";
+const isCloudDb = dbUrl && !dbUrl.includes("localhost") && !dbUrl.includes("127.0.0.1") && !dbUrl.includes("@postgres:5432");
+
 const pool = new pg.Pool({
-    connectionString: process.env.DATABASE_URL || "postgresql://postgres:postgres@localhost:5432/occ",
+    connectionString: dbUrl,
+    ssl: isCloudDb ? { rejectUnauthorized: false } : false,
 });
 
 const statements = [

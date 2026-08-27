@@ -4,12 +4,14 @@
   "private": true,
   "type": "module",
   "workspaces": [
-    "frontend"
+    "frontend",
+    "backend"
   ],
   "scripts": {
     "build": "npm --prefix frontend install && npm --prefix frontend run build",
     "predeploy": "npm run build",
-    "deploy": "wrangler deploy --config wrangler.jsonc"
+    "deploy": "wrangler deploy --config wrangler.jsonc",
+    "migrate": "node backend/migrate-all.js"
   },
   "devDependencies": {
     "wrangler": "^4.126.0"
