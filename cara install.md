@@ -33,6 +33,21 @@ docker compose ps
 6. Buka http://localhost:5173.
 7. Untuk WhatsApp, buka http://localhost:2785 dan scan QR dengan nomor khusus. Isi `WA_API_KEY` pada environment backend bila gateway memerlukannya.
 
+## Deployment Cloudflare
+
+Frontend OCC, termasuk admin panel dan route `/admin`, dideploy sebagai SPA melalui root `wrangler.jsonc`:
+
+```powershell
+npm run build
+npm run deploy
+```
+
+URL online: https://occ.nirmanatech12.workers.dev
+
+Admin online: https://occ.nirmanatech12.workers.dev/admin
+
+Catatan: Cloudflare deployment ini menyajikan frontend statis. Login dan CRUD admin memerlukan backend OCC yang dapat diakses publik melalui `VITE_API_URL`; `localhost:5000` hanya berlaku untuk development lokal. Deploy backend Express secara terpisah, lalu set `VITE_API_URL` sebelum build frontend berikutnya.
+
 ### Perintah pemeliharaan
 
 ```powershell
