@@ -23,7 +23,25 @@ const __dirname = path.dirname(path.dirname(__filename)); // Go up one level fro
 
 const app = express();
 
-app.use(cors());
+const allowedOrigins = [
+    /\.workers\.dev$/,
+    /\.pages\.dev$/,
+    "http://localhost:5173",
+    "http://localhost:4173",
+    process.env.PUBLIC_APP_URL,
+].filter(Boolean);
+
+app.use(cors({
+    origin: (origin, callback) => {
+        // Allow requests with no origin (mobile apps, curl, Postman)
+        if (!origin) return callback(null, true);
+        const allowed = allowedOrigins.some(o =>
+            o instanceof RegExp ? o.test(origin) : o === origin
+        );
+        callback(null, allowed ? origin : false);
+    },
+    credentials: true,
+}));
 app.use(helmet({
     crossOriginResourcePolicy: { policy: "cross-origin" } // Allow image loading from other origins/same origin
 }));
