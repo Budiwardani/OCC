@@ -46,7 +46,7 @@ URL online: https://occ.nirmanatech12.workers.dev
 
 Admin online: https://occ.nirmanatech12.workers.dev/admin
 
-Catatan: Cloudflare deployment ini menyajikan frontend statis. Login dan CRUD admin memerlukan backend OCC yang dapat diakses publik melalui `VITE_API_URL`; `localhost:5000` hanya berlaku untuk development lokal. Deploy backend Express secara terpisah, lalu set `VITE_API_URL` sebelum build frontend berikutnya.
+Catatan: Cloudflare deployment ini menyajikan frontend statis. Login dan CRUD admin memerlukan backend OCC yang dapat diakses publik melalui `VITE_API_URL`; `localhost:5000` hanya berlaku untuk development lokal dan tidak boleh dipakai pada build production. Salin `frontend/.env.production.example` menjadi `.env.production`, isi URL backend publik, lalu build dan deploy ulang.
 
 ### Perintah pemeliharaan
 
