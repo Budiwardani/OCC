@@ -1,0 +1,48 @@
+import axios from "axios";
+
+const normalizePhone = (phone) => {
+    const digits = String(phone || "").replace(/\D/g, "");
+    if (!digits) return "";
+    if (digits.startsWith("0")) return `62${digits.slice(1)}`;
+    if (digits.startsWith("8")) return `62${digits}`;
+    return digits;
+};
+
+export const sendWhatsAppTicket = async ({ phone, customerName, ticketCode, trackingUrl }) => {
+    const baseUrl = process.env.OPENWA_URL;
+    const apiKey = process.env.OPENWA_API_KEY;
+    const sendUrl = process.env.OPENWA_SEND_URL || (baseUrl ? `${baseUrl.replace(/\/$/, "")}/sendText` : "");
+
+    if (!sendUrl || !apiKey) {
+        return { status: "skipped", reason: "OpenWA is not configured" };
+    }
+
+    const recipient = normalizePhone(phone);
+    if (!recipient) return { status: "skipped", reason: "Phone number is empty" };
+
+    const message = [
+        `Halo ${customerName || "Pelapor"}, laporan Anda sudah diterima.`,
+        `Nomor tiket: ${ticketCode}`,
+        `Lacak laporan: ${trackingUrl}`,
+    ].join("\n");
+
+    try {
+        await axios.post(sendUrl, {
+            phone: recipient,
+            to: recipient,
+            message,
+            text: message,
+        }, {
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${apiKey}`,
+                "X-API-Key": apiKey,
+            },
+            timeout: 10_000,
+        });
+        return { status: "sent", recipient };
+    } catch (error) {
+        console.error("OpenWA notification failed:", error.response?.data || error.message);
+        return { status: "failed", recipient, reason: "Gateway request failed" };
+    }
+};

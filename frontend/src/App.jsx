@@ -61,6 +61,15 @@ function App() {
           <Route path="/dashboard/companies" element={<Companies />} />
           <Route path="/dashboard/official-emails" element={<OfficialEmails />} />
           <Route path="/dashboard/master-templates" element={<MasterTemplates />} />
+          <Route path="/admin" element={<Dashboard />} />
+          <Route path="/admin/complaints" element={<Complaints />} />
+          <Route path="/admin/complaints/:id" element={<ComplaintDetail />} />
+          <Route path="/admin/agents" element={<Agents />} />
+          <Route path="/admin/branding" element={<Branding />} />
+          <Route path="/admin/categories" element={<Categories />} />
+          <Route path="/admin/companies" element={<Companies />} />
+          <Route path="/admin/official-emails" element={<OfficialEmails />} />
+          <Route path="/admin/master-templates" element={<MasterTemplates />} />
         </Routes>
         <ChatWidget />
       </Suspense>

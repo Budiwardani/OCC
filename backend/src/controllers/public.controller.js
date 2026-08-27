@@ -1,5 +1,6 @@
 import db from "../config/db.js";
 import { generateTicket, generatePublicToken } from "../utils/ticket.util.js";
+import { sendWhatsAppTicket } from "../services/whatsapp.service.js";
 
 export const getPublicStats = async (req, res) => {
     try {
@@ -108,12 +109,15 @@ export const submitComplaint = async (req, res) => {
             await db.query(`INSERT INTO complaint_attachments (complaint_id, file_path) VALUES ${attachmentValues}`, attachmentParams);
         }
 
-        // Mock WhatsApp Notification
-        if (phone) {
-            console.log(`[MOCK WHATSAPP] Sending message to ${phone}: "Hello ${customer_name}, your complaint (${newComplaint.ticket_code}) has been received. Track it here: http://localhost:5173/track"`);
-        }
+        const trackingUrl = `${process.env.PUBLIC_APP_URL || "http://localhost:5173"}/?tab=tracking`;
+        const whatsapp = await sendWhatsAppTicket({
+            phone,
+            customerName: customer_name,
+            ticketCode: newComplaint.ticket_code,
+            trackingUrl,
+        });
 
-        res.json({ ticket_code: newComplaint.ticket_code, public_token: newComplaint.public_token });
+        res.json({ ticket_code: newComplaint.ticket_code, public_token: newComplaint.public_token, whatsapp });
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: 'Server error' });

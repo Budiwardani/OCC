@@ -32,12 +32,25 @@ services:
       DATABASE_URL: postgresql://postgres:postgres@postgres:5432/occ
       JWT_SECRET: super_secret_occ_key_123
       OLLAMA_URL: http://ollama:11434
+      OPENWA_URL: http://openwa:2785
+      OPENWA_SEND_URL: http://openwa:2785/sendText
+      OPENWA_API_KEY: ${OPENWA_API_KEY:-}
+      PUBLIC_APP_URL: http://localhost:5173
     command: sh -c "npm install && npm run migrate && npm start"
     depends_on:
       postgres:
         condition: service_healthy
       ollama:
         condition: service_started
+
+  openwa:
+    image: ghcr.io/rmyndharis/openwa:latest
+    container_name: occ-openwa
+    restart: unless-stopped
+    ports:
+      - "2785:2785"
+    environment:
+      PORT: 2785
 
   frontend:
     image: node:20-alpine

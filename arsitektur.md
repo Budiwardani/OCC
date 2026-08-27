@@ -10,6 +10,7 @@ flowchart LR
     B --> P[(PostgreSQL)]
     B --> S[Local Upload Storage]
     B --> O[Ollama AI]
+    B --> W[OpenWA Gateway]
 ```
 
 ## Komponen
@@ -44,6 +45,7 @@ Docker Compose menyediakan:
 | Backend | 5000 | 5000 |
 | Frontend | 5173 | 5173 |
 | Ollama | 11434 | 11435 |
+| OpenWA | 2785 | 2785 |
 
 Backend mengakses PostgreSQL dan Ollama melalui nama service Docker dan port internal.
 
@@ -60,5 +62,6 @@ Backend mengakses PostgreSQL dan Ollama melalui nama service Docker dan port int
 - Isolasi company belum diterapkan konsisten pada seluruh query.
 - Static upload belum memiliki authorization per file.
 - Notifikasi eksternal belum menjadi service yang andal.
+- OpenWA membutuhkan QR pairing manual dan konfigurasi API key/send endpoint.
 - Audit dan SLA baru berupa struktur database.
 - Tidak ada test suite backend/frontend yang mencerminkan alur bisnis utama.

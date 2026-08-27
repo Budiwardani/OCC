@@ -20,6 +20,7 @@ const statements = [
     "ALTER TABLE companies ADD COLUMN IF NOT EXISTS social_media JSONB DEFAULT '{}'",
     "ALTER TABLE companies ADD COLUMN IF NOT EXISTS logo_url TEXT",
     "ALTER TABLE complaints ADD COLUMN IF NOT EXISTS phone VARCHAR(50)",
+    "CREATE INDEX IF NOT EXISTS complaints_phone_idx ON complaints (phone)",
     "ALTER TABLE complaints ALTER COLUMN company_id SET DEFAULT 1",
     "CREATE TABLE IF NOT EXISTS categories (id VARCHAR(10) PRIMARY KEY, name VARCHAR(100) NOT NULL UNIQUE, is_active BOOLEAN DEFAULT TRUE, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)",
     "CREATE TABLE IF NOT EXISTS sequences (name VARCHAR(50) PRIMARY KEY, current_value INTEGER NOT NULL DEFAULT 0)",

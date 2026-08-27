@@ -19,6 +19,7 @@ Status fitur berdasarkan implementasi kode saat ini.
 | Fitur | Status | Catatan |
 |---|---|---|
 | Login JWT | Ada | Role dan scope perusahaan diterapkan pada endpoint utama |
+| Admin panel alias | Ada | Dashboard dapat diakses melalui `/admin` dan `/dashboard` |
 | KPI dashboard | Ada | Activity feed mengambil audit event terbaru |
 | Daftar pengaduan | Ada | Pagination, pencarian, dan filter tersedia |
 | Detail pengaduan | Ada | Status, prioritas, dan assignment tersedia |
@@ -46,7 +47,7 @@ Status fitur berdasarkan implementasi kode saat ini.
 | Docker Compose | Ada | Menjalankan PostgreSQL, backend, frontend, dan Ollama |
 | AI chat Ollama | Ada | Rate limit tersedia; auth dan budget control masih perlu deployment policy |
 | Email notification | Belum ada | Beberapa alur masih console log |
-| WhatsApp | Parsial | Menggunakan deep link `wa.me`, bukan provider terkelola |
+| WhatsApp OpenWA | Parsial | Service dan pengiriman otomatis tersedia; perlu QR pairing dan API key |
 | SLA tracking | Parsial | SLA awal dibuat saat perubahan complaint; job breach dan alert belum ada |
 | Audit log | Parsial | Update complaint dan response dicatat; cakupan seluruh aktivitas belum lengkap |
 | Mobile Flutter | Parsial | Project tersedia, integrasi dan test bisnis belum lengkap |

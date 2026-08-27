@@ -6,7 +6,7 @@
 
 - Windows dengan Docker Desktop aktif.
 - Git atau salinan workspace OCC.
-- Port host `5000`, `5173`, `5433`, dan `11435` tersedia.
+- Port host `5000`, `5173`, `5433`, `11435`, dan `2785` tersedia.
 
 ### Langkah
 
@@ -31,6 +31,7 @@ docker compose ps
 
 5. Migration runner berjalan otomatis saat backend start dan membuat tabel runtime yang diperlukan.
 6. Buka http://localhost:5173.
+7. Untuk WhatsApp, buka http://localhost:2785 dan scan QR dengan nomor khusus. Isi `OPENWA_API_KEY` pada environment backend bila gateway memerlukannya.
 
 ### Perintah pemeliharaan
 
@@ -83,6 +84,15 @@ Frontend:
 
 ```text
 VITE_API_URL=http://localhost:5000/api
+```
+
+OpenWA backend:
+
+```text
+OPENWA_URL=http://localhost:2785
+OPENWA_SEND_URL=http://localhost:2785/sendText
+OPENWA_API_KEY=isi-setelah-gateway aktif
+PUBLIC_APP_URL=http://localhost:5173
 ```
 
 ## Catatan Database
