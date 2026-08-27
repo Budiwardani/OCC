@@ -32,9 +32,10 @@ services:
       DATABASE_URL: postgresql://postgres:postgres@postgres:5432/occ
       JWT_SECRET: super_secret_occ_key_123
       OLLAMA_URL: http://ollama:11434
-      OPENWA_URL: http://openwa:2785
-      OPENWA_SEND_URL: http://openwa:2785/sendText
-      OPENWA_API_KEY: ${OPENWA_API_KEY:-}
+      WA_GATEWAY_URL: http://openwa:2785
+      WA_SESSION_ID: ${WA_SESSION_ID:-default}
+      WA_SEND_URL: ${WA_SEND_URL:-http://openwa:2785/api/sessions/default/messages/send-text}
+      WA_API_KEY: ${WA_API_KEY:-}
       PUBLIC_APP_URL: http://localhost:5173
     command: sh -c "npm install && npm run migrate && npm start"
     depends_on:

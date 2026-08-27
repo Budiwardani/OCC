@@ -10,9 +10,9 @@ Catatan: analisis lampiran yang menyatakan seluruh menu admin frontend hilang be
 
 ## Status Remediasi Audit Ini
 
-Sudah diperbaiki: scope company/assignment pada query complaint utama, validasi assignee lintas perusahaan, endpoint dan UI respons, audit log untuk update/respons, pencatatan SLA awal, migration runner idempoten, bootstrap schema Docker, token tracking dan upload publik, rate limit publik/AI, batas upload 5 MB, data terbaru publik yang tidak lagi memuat deskripsi, dashboard activity feed, route Surat Kuasa duplikat, konsistensi kredensial Superadmin, alias admin `/admin`, migration phone eksplisit, dan integrasi service OpenWA configurable.
+Sudah diperbaiki: scope company/assignment pada query complaint utama, validasi assignee lintas perusahaan, endpoint dan UI respons, audit log untuk update/respons, pencatatan SLA awal, migration runner idempoten, bootstrap schema Docker, token tracking dan upload publik, rate limit publik/AI, batas upload 5 MB, data terbaru publik yang tidak lagi memuat deskripsi, dashboard activity feed, route Surat Kuasa duplikat, konsistensi kredensial Superadmin, alias admin `/admin`, migration phone eksplisit, dan integrasi service OpenWA configurable dengan pengiriman non-blocking.
 
-Masih residual: provider email nyata, QR pairing/API key OpenWA di setiap deployment, antivirus/content scanning upload, download file dengan authorization penuh, CAPTCHA, job SLA breach otomatis, test suite bisnis lengkap, dan hardening production image/dependency.
+Masih residual: provider email nyata, image OpenWA/QR pairing/API key di setiap deployment, antivirus/content scanning upload, download file dengan authorization penuh, CAPTCHA, job SLA breach otomatis, test suite bisnis lengkap, dan hardening production image/dependency.
 
 ## Temuan Prioritas Tinggi
 

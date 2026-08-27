@@ -9,9 +9,12 @@ const normalizePhone = (phone) => {
 };
 
 export const sendWhatsAppTicket = async ({ phone, customerName, ticketCode, trackingUrl }) => {
-    const baseUrl = process.env.OPENWA_URL;
-    const apiKey = process.env.OPENWA_API_KEY;
-    const sendUrl = process.env.OPENWA_SEND_URL || (baseUrl ? `${baseUrl.replace(/\/$/, "")}/sendText` : "");
+    const baseUrl = process.env.WA_GATEWAY_URL || process.env.OPENWA_URL;
+    const apiKey = process.env.WA_API_KEY || process.env.OPENWA_API_KEY;
+    const sessionId = process.env.WA_SESSION_ID || "default";
+    const sendUrl = process.env.WA_SEND_URL || process.env.OPENWA_SEND_URL || (
+        baseUrl ? `${baseUrl.replace(/\/$/, "")}/api/sessions/${sessionId}/messages/send-text` : ""
+    );
 
     if (!sendUrl || !apiKey) {
         return { status: "skipped", reason: "OpenWA is not configured" };
@@ -27,10 +30,8 @@ export const sendWhatsAppTicket = async ({ phone, customerName, ticketCode, trac
     ].join("\n");
 
     try {
-        await axios.post(sendUrl, {
-            phone: recipient,
+        const response = await axios.post(sendUrl, {
             to: recipient,
-            message,
             text: message,
         }, {
             headers: {
@@ -40,7 +41,7 @@ export const sendWhatsAppTicket = async ({ phone, customerName, ticketCode, trac
             },
             timeout: 10_000,
         });
-        return { status: "sent", recipient };
+        return { status: "sent", recipient, response: response.data };
     } catch (error) {
         console.error("OpenWA notification failed:", error.response?.data || error.message);
         return { status: "failed", recipient, reason: "Gateway request failed" };

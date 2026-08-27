@@ -1,4 +1,9 @@
 ALTER TABLE complaints
-    ADD COLUMN IF NOT EXISTS phone VARCHAR(20);
+    ADD COLUMN IF NOT EXISTS phone VARCHAR(20) NOT NULL DEFAULT '';
+
+ALTER TABLE complaints
+    ALTER COLUMN phone TYPE VARCHAR(20) USING LEFT(phone, 20),
+    ALTER COLUMN phone SET DEFAULT '',
+    ALTER COLUMN phone SET NOT NULL;
 
 CREATE INDEX IF NOT EXISTS complaints_phone_idx ON complaints (phone);

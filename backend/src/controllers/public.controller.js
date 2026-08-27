@@ -110,14 +110,16 @@ export const submitComplaint = async (req, res) => {
         }
 
         const trackingUrl = `${process.env.PUBLIC_APP_URL || "http://localhost:5173"}/?tab=tracking`;
-        const whatsapp = await sendWhatsAppTicket({
+        sendWhatsAppTicket({
             phone,
             customerName: customer_name,
             ticketCode: newComplaint.ticket_code,
             trackingUrl,
+        }).catch((error) => {
+            console.error("WhatsApp notification failed after complaint save:", error.message);
         });
 
-        res.json({ ticket_code: newComplaint.ticket_code, public_token: newComplaint.public_token, whatsapp });
+        res.status(201).json({ ticket_code: newComplaint.ticket_code, public_token: newComplaint.public_token });
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: 'Server error' });
