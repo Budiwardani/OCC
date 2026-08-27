@@ -6,6 +6,8 @@ Tanggal audit: 27 Agustus 2026
 
 Fondasi MVP OCC sudah berjalan: portal publik, dashboard internal, administrasi, upload dokumen, API, Docker Compose, dan proxy AI tersedia. Namun sistem belum siap untuk deployment produksi sebelum kontrol akses, database setup, keamanan endpoint publik, notifikasi, dan pengujian diperbaiki.
 
+Catatan: analisis lampiran yang menyatakan seluruh menu admin frontend hilang berasal dari snapshot sebelum remediasi. Pada versi saat ini login, dashboard KPI/activity, sidebar, complaint list/detail, agent/manager, company, category, branding, email, template, export CSV, dan response UI sudah tersedia.
+
 ## Status Remediasi Audit Ini
 
 Sudah diperbaiki: scope company/assignment pada query complaint utama, validasi assignee lintas perusahaan, endpoint dan UI respons, audit log untuk update/respons, pencatatan SLA awal, migration runner idempoten, bootstrap schema Docker, token tracking dan upload publik, rate limit publik/AI, batas upload 5 MB, data terbaru publik yang tidak lagi memuat deskripsi, dashboard activity feed, route Surat Kuasa duplikat, serta konsistensi kredensial Superadmin.
@@ -32,7 +34,7 @@ Masih residual: pengiriman email/WhatsApp provider nyata, antivirus/content scan
 | G-09 | Email hanya console log dan WhatsApp berupa deep link | Pengiriman tidak terukur dan tidak dapat retry | Tambahkan provider, status delivery, queue, dan notification history |
 | G-10 | Multi-company belum lengkap; public complaint dan branding tidak scoped | Data serta branding dapat tertukar antar perusahaan | Wajibkan company context pada request dan semua query |
 | G-11 | Duplicate mounting Surat Kuasa | Route dapat diproses dua kali atau sulit dipelihara | Pertahankan satu lokasi registrasi route |
-| G-12 | Dashboard activity belum selesai | Monitoring operasional tidak lengkap | Tentukan metrik dan implementasikan endpoint/UI atau hapus placeholder |
+| G-12 | Dashboard activity belum selesai | Monitoring operasional tidak lengkap | Selesai: activity feed dan endpoint audit terbaru sudah tersedia |
 
 ## Temuan Prioritas Rendah / Kualitas
 
