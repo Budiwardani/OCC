@@ -8,6 +8,7 @@ export default function Agents() {
     const [companies, setCompanies] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
+    const [editingUser, setEditingUser] = useState(null);
     const [formData, setFormData] = useState({ name: '', email: '', password: '', role: 'Agent', company_id: '' });
     const navigate = useNavigate();
 
@@ -77,6 +78,54 @@ export default function Agents() {
         }
     };
 
+    const handleSubmitUser = async (e) => {
+        e.preventDefault();
+        try {
+            const token = localStorage.getItem("token");
+            const payload = { ...formData };
+            if (!payload.password) delete payload.password;
+            if (!isSuperadmin) {
+                delete payload.role;
+                delete payload.company_id;
+            }
+
+            if (editingUser) {
+                await api.put(`/dashboard/agents/${editingUser.id}`, payload, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+            } else {
+                await api.post("/dashboard/agents", payload, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+            }
+            setShowModal(false);
+            setEditingUser(null);
+            setFormData({ name: '', email: '', password: '', role: 'Agent', company_id: companies.length > 0 ? companies[0].id : '' });
+            fetchAgents();
+        } catch (error) {
+            alert("Failed to save user: " + (error.response?.data?.message || error.message));
+        }
+    };
+
+    const handleDelete = async (agent) => {
+        if (!window.confirm(`Delete user ${agent.name}?`)) return;
+        try {
+            const token = localStorage.getItem("token");
+            await api.delete(`/dashboard/agents/${agent.id}`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            fetchAgents();
+        } catch (error) {
+            alert("Failed to delete user: " + (error.response?.data?.message || error.message));
+        }
+    };
+
+    const openEdit = (agent) => {
+        setEditingUser(agent);
+        setFormData({ name: agent.name, email: agent.email, password: '', role: agent.role, company_id: agent.company_id || '' });
+        setShowModal(true);
+    };
+
     return (
         <div className="flex h-screen overflow-hidden bg-secondary-50">
             <Sidebar />
@@ -110,6 +159,7 @@ export default function Agents() {
                                                         <th className="px-6 py-3 text-left text-xs font-medium text-secondary-500 uppercase tracking-wider">Email</th>
                                                         <th className="px-6 py-3 text-left text-xs font-medium text-secondary-500 uppercase tracking-wider">Role</th>
                                                         <th className="px-6 py-3 text-left text-xs font-medium text-secondary-500 uppercase tracking-wider">Company</th>
+                                                        <th className="px-6 py-3 text-left text-xs font-medium text-secondary-500 uppercase tracking-wider">Actions</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody className="bg-white divide-y divide-secondary-200">
@@ -126,6 +176,10 @@ export default function Agents() {
                                                                 </span>
                                                             </td>
                                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-secondary-500">{agent.company_name || '-'}</td>
+                                                            <td className="px-6 py-4 whitespace-nowrap text-sm space-x-3">
+                                                                <button onClick={() => openEdit(agent)} className="text-primary-600 hover:text-primary-800">Edit</button>
+                                                                {agent.id !== user.id && <button onClick={() => handleDelete(agent)} className="text-red-600 hover:text-red-800">Delete</button>}
+                                                            </td>
                                                         </tr>
                                                     ))}
                                                 </tbody>
@@ -149,8 +203,8 @@ export default function Agents() {
                         <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
                         <div className="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
                             <div>
-                                <h3 className="text-lg leading-6 font-medium text-gray-900">Create New User</h3>
-                                <form onSubmit={handleCreate} className="mt-5 space-y-4">
+                                <h3 className="text-lg leading-6 font-medium text-gray-900">{editingUser ? "Edit User" : "Create New User"}</h3>
+                                <form onSubmit={editingUser ? handleSubmitUser : handleCreate} className="mt-5 space-y-4">
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700">Name</label>
                                         <input
@@ -180,6 +234,7 @@ export default function Agents() {
                                             value={formData.password}
                                             onChange={e => setFormData({ ...formData, password: e.target.value })}
                                         />
+                                        {editingUser && <p className="mt-1 text-xs text-gray-500">Leave blank to keep the current password.</p>}
                                     </div>
 
                                     {isSuperadmin && (

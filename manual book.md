@@ -30,9 +30,24 @@ Jangan membagikan kode tiket dan email pelapor kepada pihak yang tidak berwenang
 
 ## 4. Login Internal
 
-Gunakan akun admin yang dikonfigurasi oleh administrator. Jangan menggunakan kredensial contoh pada lingkungan produksi.
+Gunakan halaman `/login` dengan akun Superadmin berikut pada instalasi lokal:
+
+- Email: `admin@occ.com`
+- Password: `superadmin123`
+
+Segera ganti password pada lingkungan produksi dan jangan membagikan kredensial ini.
 
 Setelah login, pengguna internal dapat mengakses menu sesuai role yang diberikan, seperti dashboard, pengaduan, agent, kategori, perusahaan, branding, email resmi, dan template.
+
+## 5. CRUD User oleh Superadmin
+
+1. Login menggunakan akun Superadmin.
+2. Buka menu **Agents & Managers** atau URL `/dashboard/agents`.
+3. Klik **Add New User** untuk membuat Agent, Manager, atau Superadmin.
+4. Klik **Edit** untuk mengubah nama, email, role, company, atau password.
+5. Klik **Delete** untuk menghapus user lain.
+
+Superadmin dapat mengelola user lintas company. Manager hanya dapat membuat dan mengelola Agent pada company-nya. Akun yang sedang digunakan tidak dapat menghapus dirinya sendiri.
 
 ## 5. Menangani Pengaduan
 

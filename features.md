@@ -25,7 +25,7 @@ Status fitur berdasarkan implementasi kode saat ini.
 | Detail pengaduan | Ada | Status, prioritas, dan assignment tersedia |
 | Balasan agent | Ada | Endpoint dan panel Responses tersedia |
 | Export CSV | Ada | Scope mengikuti akses complaint user |
-| Agent/manager | Ada | Menu, pembuatan user, role, dan scope perusahaan tersedia |
+| Agent/manager | Ada | Superadmin CRUD user; Manager mengelola Agent dalam company |
 | Audit log viewer | Parsial | Activity feed tersedia; halaman audit lengkap belum ada |
 | Reports terstruktur | Parsial | Export CSV tersedia; laporan performa/SLA belum ada |
 

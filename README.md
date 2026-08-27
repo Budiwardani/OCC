@@ -30,6 +30,8 @@ node setup-db.js
 - Email: `admin@occ.com`
 - Password: `superadmin123`
 
+Superadmin dapat mengelola user melalui menu **Agents & Managers**: membuat, mengubah, dan menghapus Agent, Manager, atau Superadmin.
+
 ### Backend Setup
 
 ```bash

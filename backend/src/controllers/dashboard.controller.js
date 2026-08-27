@@ -292,6 +292,74 @@ export const createAgent = async (req, res) => {
     }
 };
 
+export const updateAgent = async (req, res) => {
+    const { id } = req.params;
+    const { name, email, password, role, company_id } = req.body;
+
+    try {
+        const current = await pool.query("SELECT id, role, company_id FROM users WHERE id = $1", [id]);
+        if (current.rows.length === 0) return res.status(404).json({ message: "User not found" });
+
+        const target = current.rows[0];
+        if (req.user.role !== "Superadmin" && target.company_id !== req.user.company_id) {
+            return res.status(403).json({ message: "Forbidden" });
+        }
+        if (target.id === req.user.id && role && role !== "Superadmin") {
+            return res.status(400).json({ message: "You cannot remove your own Superadmin role" });
+        }
+        if (req.user.role !== "Superadmin" && role && role !== "Agent") {
+            return res.status(403).json({ message: "Managers can only manage Agents" });
+        }
+
+        const fields = [];
+        const params = [];
+        const add = (field, value) => {
+            if (value !== undefined) {
+                params.push(value);
+                fields.push(`${field} = $${params.length}`);
+            }
+        };
+
+        add("name", name);
+        add("email", email);
+        add("role", role);
+        add("company_id", req.user.role === "Superadmin" ? company_id : req.user.company_id);
+        if (password) {
+            params.push(await bcrypt.hash(password, 10));
+            fields.push(`password_hash = $${params.length}`);
+        }
+        if (fields.length === 0) return res.status(400).json({ message: "No updates provided" });
+
+        params.push(id);
+        const result = await pool.query(
+            `UPDATE users SET ${fields.join(", ")} WHERE id = $${params.length}
+             RETURNING id, name, email, role, company_id`,
+            params
+        );
+        res.json(result.rows[0]);
+    } catch (err) {
+        logger.error(err.message, { stack: err.stack, context: "updateAgent" });
+        res.status(err.code === "23505" ? 400 : 500).json({ message: err.code === "23505" ? "Email already exists" : "Server Error" });
+    }
+};
+
+export const deleteAgent = async (req, res) => {
+    const { id } = req.params;
+    try {
+        if (Number(id) === req.user.id) {
+            return res.status(400).json({ message: "You cannot delete your own account" });
+        }
+        const scope = req.user.role === "Superadmin" ? "" : " AND company_id = $2";
+        const params = req.user.role === "Superadmin" ? [id] : [id, req.user.company_id];
+        const result = await pool.query(`DELETE FROM users WHERE id = $1${scope} RETURNING id`, params);
+        if (result.rows.length === 0) return res.status(404).json({ message: "User not found" });
+        res.json({ message: "User deleted" });
+    } catch (err) {
+        logger.error(err.message, { stack: err.stack, context: "deleteAgent" });
+        res.status(500).json({ message: "Server Error" });
+    }
+};
+
 export const notifyComplaint = async (req, res) => {
     const { id } = req.params;
     const { method, from_email_id } = req.body;
