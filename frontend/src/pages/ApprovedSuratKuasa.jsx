@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import api from "../api/api";
+import api, { getFileUrl } from "../api/api";
 import Sidebar from "../components/Sidebar";
 
 export default function ApprovedSuratKuasa() {
@@ -70,7 +70,7 @@ export default function ApprovedSuratKuasa() {
                                                     </td>
                                                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                                         <a
-                                                            href={`http://localhost:5000/${file.file_path}`}
+                                                            href={getFileUrl(file.file_path)}
                                                             target="_blank"
                                                             rel="noopener noreferrer"
                                                             className="text-primary-600 hover:text-primary-900"

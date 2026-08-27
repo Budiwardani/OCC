@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
-import api from "../api/api";
+import api, { getFileUrl } from "../api/api";
 import Sidebar from "../components/Sidebar";
 
 export default function MasterTemplates() {
@@ -69,7 +69,7 @@ export default function MasterTemplates() {
                                             <p className="text-xs text-green-600">Updated: {new Date(template.updated_at).toLocaleString()}</p>
                                         </div>
                                         <a
-                                            href={`http://localhost:5000/${template.file_path}`}
+                                            href={getFileUrl(template.file_path)}
                                             target="_blank"
                                             className="text-primary-600 hover:text-primary-800 text-sm font-medium underline"
                                         >

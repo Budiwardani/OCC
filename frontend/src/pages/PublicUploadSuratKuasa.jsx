@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
-import api from "../api/api";
+import api, { getFileUrl } from "../api/api";
 
 export default function PublicUploadSuratKuasa() {
     const { ticket } = useParams();
@@ -88,7 +88,7 @@ export default function PublicUploadSuratKuasa() {
                                 </label>
                                 {template && (
                                     <div className="mt-1 mb-4">
-                                        <a href={`http://localhost:5000/${template.file_path}`} target="_blank" className="text-sm text-primary-600 hover:underline font-medium">
+                                        <a href={getFileUrl(template.file_path)} target="_blank" className="text-sm text-primary-600 hover:underline font-medium">
                                             Download Standard Template
                                         </a>
                                     </div>

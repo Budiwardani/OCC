@@ -3,8 +3,12 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
+  "workspaces": [
+    "frontend"
+  ],
   "scripts": {
-    "build": "npm --prefix frontend run build",
+    "build": "npm --prefix frontend install && npm --prefix frontend run build",
+    "predeploy": "npm run build",
     "deploy": "wrangler deploy --config wrangler.jsonc"
   },
   "devDependencies": {

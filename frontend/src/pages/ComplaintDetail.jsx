@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import api from "../api/api";
+import api, { getFileUrl } from "../api/api";
 import Sidebar from "../components/Sidebar";
 
 export default function ComplaintDetail() {
@@ -106,7 +106,7 @@ export default function ComplaintDetail() {
         try {
             const mtRes = await api.get("/master-files/SURAT_KUASA_TEMPLATE", { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } });
             if (mtRes.data) {
-                templateLink = `\n\nDownload Surat Kuasa Template: http://localhost:5000/${mtRes.data.file_path}`;
+                templateLink = `\n\nDownload Surat Kuasa Template: ${getFileUrl(mtRes.data.file_path)}`;
             }
         } catch (e) { }
 

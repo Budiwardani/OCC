@@ -1,5 +1,5 @@
 import { useState } from "react";
-import api from "../api/api";
+import api, { getFileUrl } from "../api/api";
 
 export default function TrackComplaint() {
     const [ticket, setTicket] = useState("");
@@ -156,7 +156,7 @@ export default function TrackComplaint() {
                                     <p className="text-sm text-blue-800">Download our standard Surat Kuasa form here.</p>
                                 </div>
                                 <a
-                                    href={`http://localhost:5000/${masterTemplate.file_path}`}
+                                    href={getFileUrl(masterTemplate.file_path)}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700"
@@ -186,7 +186,7 @@ export default function TrackComplaint() {
                                             </div>
                                         </div>
                                         <a
-                                            href={`http://localhost:5000/${file.file_path}`}
+                                            href={getFileUrl(file.file_path)}
                                             target="_blank"
                                             rel="noopener noreferrer"
                                             className="text-primary-600 hover:text-primary-800 text-sm font-medium hover:underline"

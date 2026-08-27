@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { getBaseUrl } from "../api/api";
 
 const ChatWidget = () => {
     const [messages, setMessages] = useState([]);
@@ -14,7 +15,7 @@ const ChatWidget = () => {
         setLoading(true);
 
         try {
-            const response = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:5000/api"}/ai/chat`, {
+            const response = await fetch(`${getBaseUrl()}/ai/chat`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ message }),

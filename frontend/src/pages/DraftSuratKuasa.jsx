@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import api from "../api/api";
+import api, { getFileUrl } from "../api/api";
 import Sidebar from "../components/Sidebar";
 
 export default function DraftSuratKuasa() {
@@ -189,7 +189,7 @@ export default function DraftSuratKuasa() {
                                                             </div>
                                                         </div>
                                                         <a
-                                                            href={`http://localhost:5000/${file.file_path}`}
+                                                            href={getFileUrl(file.file_path)}
                                                             target="_blank"
                                                             rel="noopener noreferrer"
                                                             className="text-sm font-medium text-gray-500 hover:text-gray-900"

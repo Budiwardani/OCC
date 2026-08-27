@@ -1,7 +1,20 @@
 import axios from "axios";
 
+export const getBaseUrl = () => {
+    return import.meta.env.VITE_API_URL || (import.meta.env.DEV ? "http://localhost:5000/api" : "/api");
+};
+
+export const getFileUrl = (filePath) => {
+    if (!filePath) return "#";
+    if (filePath.startsWith("http://") || filePath.startsWith("https://")) return filePath;
+    const apiUrl = getBaseUrl();
+    const baseOrigin = apiUrl.replace(/\/api\/?$/, "");
+    const cleanPath = filePath.startsWith("/") ? filePath.slice(1) : filePath;
+    return baseOrigin ? `${baseOrigin}/${cleanPath}` : `/${cleanPath}`;
+};
+
 const api = axios.create({
-    baseURL: import.meta.env.VITE_API_URL || (import.meta.env.DEV ? "http://localhost:5000/api" : ""),
+    baseURL: getBaseUrl(),
 });
 
 api.interceptors.request.use((config) => {
@@ -25,3 +38,4 @@ api.interceptors.response.use(
 );
 
 export default api;
+
