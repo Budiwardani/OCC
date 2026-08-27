@@ -122,8 +122,8 @@ export default function Portal() {
                         OCC
                     </div>
                     <div>
-                        <h1 className="text-3xl font-bold">Online Complaint Center</h1>
-                        <p className="opacity-90 mt-1">Pusat Pengaduan Masyarakat</p>
+                        <h1 className="text-3xl font-bold">Online Customer Complaint</h1>
+                        <p className="opacity-90 mt-1">Pusat Pengaduan Pelanggan</p>
                     </div>
                 </div>
             </div>
@@ -170,7 +170,7 @@ export default function Portal() {
                         <div className="bg-white rounded-xl shadow-sm p-8 border border-gray-100">
                             <h2 className="text-2xl font-bold text-blue-900 mb-6 pb-4 border-b">Tentang Layanan OCC</h2>
                             <div className="prose text-gray-600 space-y-4">
-                                <p><strong>Online Complaint Center (OCC)</strong> adalah platform pengaduan masyarakat yang memudahkan Anda untuk menyampaikan keluhan atau permasalahan yang terjadi di lingkungan sekitar.</p>
+                                <p><strong>Online Customer Complaint (OCC)</strong> adalah platform pengaduan pelanggan yang memudahkan Anda untuk menyampaikan keluhan atau permasalahan yang terjadi di lingkungan sekitar.</p>
                                 <p><strong>Apa yang bisa dilaporkan?</strong><br />
                                     Jalan rusak, lampu jalan mati, sampah menumpuk, saluran air tersumbat, fasilitas rusak, pelayanan publik yang kurang memuaskan, dll.</p>
                                 <div className="bg-blue-50 p-6 rounded-lg mt-6">

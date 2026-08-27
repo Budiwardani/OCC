@@ -2,7 +2,7 @@
 
 ## 1. Ringkasan Produk
 
-OCC (Online Complaint Center) adalah platform untuk menerima, melacak, mengelola, dan menyelesaikan pengaduan pelanggan atau masyarakat. Produk terdiri dari portal publik, dashboard internal, API Node.js, PostgreSQL, dan aplikasi Flutter yang masih berada dalam tahap pengembangan.
+OCC (Online Customer Complaint) adalah platform untuk menerima, melacak, mengelola, dan menyelesaikan pengaduan pelanggan. Produk terdiri dari portal publik, dashboard internal, API Node.js, PostgreSQL, dan aplikasi Flutter yang masih berada dalam tahap pengembangan.
 
 ## 2. Tujuan
 
