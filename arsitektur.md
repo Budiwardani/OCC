@@ -33,7 +33,7 @@ flowchart LR
 
 ### Database
 
-PostgreSQL menyimpan perusahaan, user, pengaduan, respons, attachment, SLA, dan audit log. Beberapa fitur baru bergantung pada migration file tambahan yang belum digabung ke satu runner instalasi.
+PostgreSQL menyimpan perusahaan, user, pengaduan, respons, attachment, SLA, dan audit log. Migration runner idempoten tersedia untuk instalasi dan update schema.
 
 ### Infrastruktur
 
@@ -47,7 +47,7 @@ Docker Compose menyediakan:
 | Ollama | 11434 | 11435 |
 | OpenWA | 2785 | 2785 |
 
-Backend mengakses PostgreSQL dan Ollama melalui nama service Docker dan port internal.
+Backend mengakses PostgreSQL, Ollama, dan OpenWA melalui nama service Docker dan port internal. Cloudflare Worker dapat digunakan sebagai proxy WhatsApp eksternal di luar stack lokal.
 
 ## Alur Pengaduan
 
@@ -59,9 +59,9 @@ Backend mengakses PostgreSQL dan Ollama melalui nama service Docker dan port int
 
 ## Batas Arsitektur Saat Ini
 
-- Isolasi company belum diterapkan konsisten pada seluruh query.
+- Beberapa query administrasi non-complaint masih membutuhkan audit scope company lanjutan.
 - Static upload belum memiliki authorization per file.
-- Notifikasi eksternal belum menjadi service yang andal.
+- Notifikasi email belum memakai provider nyata.
 - OpenWA membutuhkan QR pairing manual dan konfigurasi API key/send endpoint.
-- Audit dan SLA baru berupa struktur database.
+- Audit dan SLA sudah mencatat event utama, tetapi job breach otomatis belum ada.
 - Tidak ada test suite backend/frontend yang mencerminkan alur bisnis utama.

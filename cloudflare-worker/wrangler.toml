@@ -1,0 +1,11 @@
+name = "occ-wa-worker"
+main = "src/index.js"
+compatibility_date = "2026-08-27"
+
+[vars]
+WA_SESSION_ID = "default"
+WA_SEND_URL = ""
+
+# Set secrets with:
+# wrangler secret put WA_GATEWAY_URL
+# wrangler secret put WA_API_KEY

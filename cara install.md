@@ -31,7 +31,7 @@ docker compose ps
 
 5. Migration runner berjalan otomatis saat backend start dan membuat tabel runtime yang diperlukan.
 6. Buka http://localhost:5173.
-7. Untuk WhatsApp, buka http://localhost:2785 dan scan QR dengan nomor khusus. Isi `OPENWA_API_KEY` pada environment backend bila gateway memerlukannya.
+7. Untuk WhatsApp, buka http://localhost:2785 dan scan QR dengan nomor khusus. Isi `WA_API_KEY` pada environment backend bila gateway memerlukannya.
 
 ### Perintah pemeliharaan
 
@@ -89,11 +89,29 @@ VITE_API_URL=http://localhost:5000/api
 OpenWA backend:
 
 ```text
-OPENWA_URL=http://localhost:2785
-OPENWA_SEND_URL=http://localhost:2785/sendText
-OPENWA_API_KEY=isi-setelah-gateway aktif
+WA_GATEWAY_URL=http://localhost:2785
+WA_SESSION_ID=default
+WA_SEND_URL=http://localhost:2785/api/sessions/default/messages/send-text
+WA_API_KEY=isi-setelah-gateway aktif
 PUBLIC_APP_URL=http://localhost:5173
 ```
+
+## Opsi C: Cloudflare Worker untuk WhatsApp
+
+Worker opsional tersedia di `cloudflare-worker/`. Worker hanya menjadi proxy notifikasi; PostgreSQL dan backend OCC tetap berjalan seperti biasa.
+
+```powershell
+cd cloudflare-worker
+npx wrangler login
+npx wrangler secret put WA_GATEWAY_URL
+npx wrangler secret put WA_API_KEY
+npx wrangler dev
+npx wrangler deploy
+```
+
+Endpoint Worker: `POST https://<worker-domain>/api/send` dengan header `Authorization: Bearer <WA_API_KEY>` dan body JSON `{ "to": "628123456789", "text": "Nomor tiket OCC Anda: ..." }`.
+
+Jangan menaruh `WA_API_KEY` pada frontend atau repository.
 
 ## Catatan Database
 
