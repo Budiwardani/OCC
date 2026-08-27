@@ -59,25 +59,22 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 import errorHandler from "./middleware/error.middleware.js";
 
 // Health checks
-app.get('/api', (req, res) => {
-    res.json({ message: 'OCC API is running' });
-});
-app.get('/api/health', (req, res) => {
-    res.json({ status: 'ok' });
+app.get(['/', '/api', '/api/health'], (req, res) => {
+    res.json({ status: 'ok', message: 'OCC API is running' });
 });
 
-app.use("/api/auth", authRoutes);
-app.use("/api/dashboard", dashboardRoutes);
-app.use("/api/branding", brandingRoutes);
-app.use("/api/upload", uploadRoutes);
-app.use("/api/categories", categoryRoutes);
-app.use("/api/companies", companiesRoutes);
-app.use("/api/public", publicRoutes);
-app.use("/api/official-emails", officialEmailsRoutes);
-app.use("/api/master-files", masterFilesRoutes);
-app.use("/api/surat-kuasa", suratKuasaRoutes);
-app.use("/api/invoices", invoicesRoutes);
-app.use("/api/ai", aiRoutes);
+app.use(["/api/auth", "/auth"], authRoutes);
+app.use(["/api/dashboard", "/dashboard"], dashboardRoutes);
+app.use(["/api/branding", "/branding"], brandingRoutes);
+app.use(["/api/upload", "/upload"], uploadRoutes);
+app.use(["/api/categories", "/categories"], categoryRoutes);
+app.use(["/api/companies", "/companies"], companiesRoutes);
+app.use(["/api/public", "/public"], publicRoutes);
+app.use(["/api/official-emails", "/official-emails"], officialEmailsRoutes);
+app.use(["/api/master-files", "/master-files"], masterFilesRoutes);
+app.use(["/api/surat-kuasa", "/surat-kuasa"], suratKuasaRoutes);
+app.use(["/api/invoices", "/invoices"], invoicesRoutes);
+app.use(["/api/ai", "/ai"], aiRoutes);
 
 // Frontend static serving and SPA catch-all
 const frontendDist = path.join(__dirname, '../frontend/dist');
