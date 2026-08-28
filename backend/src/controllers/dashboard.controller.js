@@ -2,6 +2,7 @@ import pool from "../config/db.js";
 import bcrypt from "bcryptjs";
 import logger from "../utils/logger.js";
 import { complaintScope } from "../utils/access.util.js";
+import { sendWhatsAppMessage, normalizePhone } from "../services/whatsapp.service.js";
 
 export const dashboardStats = async (req, res) => {
     try {
@@ -369,8 +370,9 @@ export const notifyComplaint = async (req, res) => {
         const complaint = await pool.query(`SELECT * FROM complaints c WHERE c.id = $1${scope.sql}`, [id, ...scope.params]);
         if (complaint.rows.length === 0) return res.status(404).json({ message: "Complaint not found" });
 
-        const targetEmail = complaint.rows[0].customer_email;
-        const ticket = complaint.rows[0].ticket_code;
+        const c = complaint.rows[0];
+        const targetEmail = c.customer_email;
+        const ticket = c.ticket_code;
 
         if (method === 'email') {
             const sender = await pool.query("SELECT * FROM official_emails WHERE id = $1", [from_email_id]);
@@ -384,10 +386,58 @@ export const notifyComplaint = async (req, res) => {
             console.log(`[MOCK EMAIL] To: ${targetEmail}`);
             console.log(`[MOCK EMAIL] Subject: Ticket #${ticket} Update`);
 
-            // Log this action? 
-            // logger.info(...)
-
             return res.json({ message: `Email sent to ${targetEmail} from ${fromAddress}` });
+        }
+
+        if (method === 'whatsapp') {
+            if (!c.phone) {
+                return res.status(400).json({ success: false, message: "Customer tidak memiliki nomor telepon / WhatsApp." });
+            }
+
+            const appUrl = process.env.PUBLIC_APP_URL || `${req.protocol}://${req.get('host')}`;
+            const uploadLink = `${appUrl}/upload-surat/${c.ticket_code}?token=${encodeURIComponent(c.public_token || '')}`;
+
+            // Fetch master template if available
+            let templateLink = "";
+            try {
+                const mt = await pool.query("SELECT file_path FROM master_files WHERE file_key = 'SURAT_KUASA_TEMPLATE'");
+                if (mt.rows.length > 0 && mt.rows[0].file_path) {
+                    const baseUrl = appUrl.replace(/\/api\/?$/, "");
+                    templateLink = `\n\nDownload Template Surat Kuasa: ${baseUrl}/${mt.rows[0].file_path.replace(/^\//, '')}`;
+                }
+            } catch (e) {
+                // Ignore template fetch error
+            }
+
+            const text = [
+                `Halo ${c.customer_name || "Pelapor"},`,
+                ``,
+                `Update status laporan tiket #${c.ticket_code}:`,
+                `Status: ${c.status}`,
+                `Subjek: ${c.subject}`,
+                templateLink,
+                c.public_token ? `\nSilakan tanda tangani dokumen dan unggah melalui tautan berikut:\n${uploadLink}` : "",
+            ].filter(Boolean).join("\n");
+
+            const waResult = await sendWhatsAppMessage({ phone: c.phone, text });
+
+            if (waResult.success) {
+                return res.json({
+                    success: true,
+                    direct: true,
+                    message: `Pesan WhatsApp berhasil dikirim langsung ke nomor ${c.phone}!`
+                });
+            } else {
+                const recipient = normalizePhone(c.phone);
+                const fallbackUrl = `https://wa.me/${recipient}?text=${encodeURIComponent(text)}`;
+                return res.json({
+                    success: false,
+                    direct: false,
+                    fallbackUrl,
+                    reason: waResult.reason,
+                    message: `Gateway belum terhubung (${waResult.reason}). Membuka WhatsApp Web...`
+                });
+            }
         }
 
         res.status(400).json({ message: "Invalid method" });

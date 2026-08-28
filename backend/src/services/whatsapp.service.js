@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const normalizePhone = (phone) => {
+export const normalizePhone = (phone) => {
     const digits = String(phone || "").replace(/\D/g, "");
     if (!digits) return "";
     if (digits.startsWith("0")) return `62${digits.slice(1)}`;
@@ -8,7 +8,7 @@ const normalizePhone = (phone) => {
     return digits;
 };
 
-export const sendWhatsAppTicket = async ({ phone, customerName, ticketCode, trackingUrl }) => {
+export const sendWhatsAppMessage = async ({ phone, text }) => {
     const baseUrl = process.env.WA_GATEWAY_URL || process.env.OPENWA_URL;
     const apiKey = process.env.WA_API_KEY || process.env.OPENWA_API_KEY;
     const sessionId = process.env.WA_SESSION_ID || "default";
@@ -17,22 +17,16 @@ export const sendWhatsAppTicket = async ({ phone, customerName, ticketCode, trac
     );
 
     if (!sendUrl || !apiKey) {
-        return { status: "skipped", reason: "OpenWA is not configured" };
+        return { success: false, reason: "Gateway WhatsApp belum dikonfigurasi pada server (WA_GATEWAY_URL / WA_API_KEY)." };
     }
 
     const recipient = normalizePhone(phone);
-    if (!recipient) return { status: "skipped", reason: "Phone number is empty" };
-
-    const message = [
-        `Halo ${customerName || "Pelapor"}, laporan Anda sudah diterima.`,
-        `Nomor tiket: ${ticketCode}`,
-        `Lacak laporan: ${trackingUrl}`,
-    ].join("\n");
+    if (!recipient) return { success: false, reason: "Nomor telepon kosong atau tidak valid." };
 
     try {
         const response = await axios.post(sendUrl, {
             to: recipient,
-            text: message,
+            text,
         }, {
             headers: {
                 "Content-Type": "application/json",
@@ -41,9 +35,25 @@ export const sendWhatsAppTicket = async ({ phone, customerName, ticketCode, trac
             },
             timeout: 10_000,
         });
-        return { status: "sent", recipient, response: response.data };
+        return { success: true, recipient, response: response.data };
     } catch (error) {
-        console.error("OpenWA notification failed:", error.response?.data || error.message);
-        return { status: "failed", recipient, reason: "Gateway request failed" };
+        console.error("WhatsApp gateway direct send failed:", error.response?.data || error.message);
+        return { success: false, recipient, reason: error.response?.data?.message || error.message };
     }
+};
+
+export const sendWhatsAppTicket = async ({ phone, customerName, ticketCode, trackingUrl }) => {
+    const message = [
+        `Halo ${customerName || "Pelapor"}, laporan Anda sudah diterima.`,
+        `Nomor tiket: ${ticketCode}`,
+        `Lacak laporan: ${trackingUrl}`,
+    ].join("\n");
+
+    const result = await sendWhatsAppMessage({ phone, text: message });
+    return {
+        status: result.success ? "sent" : "skipped",
+        recipient: result.recipient,
+        reason: result.reason,
+        response: result.response
+    };
 };
